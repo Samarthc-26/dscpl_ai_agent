@@ -1,9 +1,13 @@
 # agents/topic_agent.py
 
-from agents.base_chain import get_conversation_chain
+# We now import the specific chain for devotionals
+from agents.base_chain import get_devotional_conversation_chain
 
 def generate_daily_program(topic, category):
-    chain = get_conversation_chain()
+    # Use the devotional chain
+    chain = get_devotional_conversation_chain()
+    if not chain:
+        return "Error: Could not initialize the devotional plan generator."
 
     prompt = f"""
     You're a Christian spiritual assistant. Create a 7-day devotional plan for the category: {category} and topic: {topic}.
