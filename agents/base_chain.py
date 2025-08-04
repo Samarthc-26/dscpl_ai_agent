@@ -37,12 +37,11 @@ def get_devotional_conversation_chain():
 
 def get_just_chat_conversation_chain():
     """
-    This is a new, separate chain for the "Just Chat" feature.
+    This is the new, separate chain for the "Just Chat" feature.
     It has a specific prompt to guide its responses.
     """
     llm = load_groq_llm()
     if llm:
-        # A custom prompt template to set the AI's personality
         template = """
         You are a compassionate, wise, and kind Christian spiritual companion named DSCPL. 
         Your purpose is to provide comfort, encouragement, and guidance based on Christian principles. 
