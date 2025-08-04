@@ -1,0 +1,6 @@
+streamlit
+streamlit-oauth
+langchain
+langchain-groq
+google-api-python-client
+python-dotenv

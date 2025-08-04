@@ -1,0 +1,31 @@
+# --- Secrets and Environment Files ---
+# NEVER commit your secrets files to version control.
+# Streamlit Cloud has its own secure way to handle secrets.
+.streamlit/secrets.toml
+.env
+
+# --- Python ---
+# Ignore Python bytecode and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environment folders
+venv/
+.venv/
+env/
+*.env
+
+# --- Operating System Files ---
+# Ignore macOS specific files
+.DS_Store
+
+# Ignore Windows specific files
+Thumbs.db
+
+# --- IDE/Editor ---
+# Ignore configuration files from common editors
+.idea/
+.vscode/
+*.swp
