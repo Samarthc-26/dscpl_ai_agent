@@ -7,7 +7,7 @@ from components.dashboard import show_dashboard
 from components.sos_support import show_sos_support
 from components.inspiration_feed import show_inspiration_feed
 from components.calendar_sync import show_calendar_sync
-from components.just_chat import show_just_chat # Import the new chat page
+from components.just_chat import show_just_chat
 
 # Initialize session state
 if "page" not in st.session_state:
@@ -32,5 +32,7 @@ elif st.session_state.page == "inspiration_feed":
     show_inspiration_feed()
 elif st.session_state.page == "calendar_sync":
     show_calendar_sync()
-elif st.session_state.page == "just_chat": # Add the new route
+elif st.session_state.page == "just_chat":
     show_just_chat()
+
+
