@@ -25,7 +25,6 @@ topics_map = {
 def render_subtopic_detail_page(section):
     """
     Renders the dedicated page for a single subtopic's content.
-    This function creates the "new page" feel.
     """
     topic_title = st.session_state.get("current_subtopic_title", "Guidance")
     content = st.session_state.get("viewing_subtopic_content", "No content available.")
@@ -35,7 +34,6 @@ def render_subtopic_detail_page(section):
     st.markdown(content, unsafe_allow_html=True)
     st.markdown("---")
 
-    # This button takes you back to the list of subtopics for the current section
     if st.button(f"⬅️ Back to {section} Topics"):
         st.session_state.viewing_subtopic_content = None
         st.session_state.current_subtopic_title = None
@@ -53,12 +51,11 @@ def show_subtopics(section):
         st.session_state.current_subtopic_title = None
 
     # --- ROUTER LOGIC ---
-    # If we have content to view, show the detail page and stop.
     if st.session_state.get("viewing_subtopic_content"):
         render_subtopic_detail_page(section)
         return
 
-    # --- SUBTOPIC LIST PAGE (the default view) ---
+    # --- SUBTOPIC LIST PAGE ---
     st.markdown(f"## ✝️ You selected: **{section}**")
 
     # Section for Predefined Topics
@@ -67,12 +64,12 @@ def show_subtopics(section):
         cols = st.columns(2)
         for i, topic in enumerate(topics_map[section]):
             if cols[i % 2].button(topic, key=f"topic_{i}"):
-                # When a button is clicked, generate guidance and set state to switch views
-                with st.spinner(f"Generating guidance for '{topic}'..."):
+                # **CORRECTED**: Using a more natural loading message
+                with st.spinner(f"Let's reflect on '{topic}'..."):
                     content = generate_spiritual_guidance(topic, section)
                     st.session_state.viewing_subtopic_content = content
                     st.session_state.current_subtopic_title = topic
-                st.rerun()  # Rerun to trigger the router logic above
+                st.rerun()
 
     st.markdown("---")
 
@@ -85,17 +82,15 @@ def show_subtopics(section):
         if not final_topic:
             st.warning("Please enter a topic in the text box above.")
         else:
-            with st.spinner(f"Generating spiritual guidance for: **{final_topic}**..."):
+            # **CORRECTED**: Using a more natural loading message
+            with st.spinner(f"Thinking about '{final_topic}' for you..."):
                 content = generate_spiritual_guidance(final_topic, section)
                 st.session_state.viewing_subtopic_content = content
                 st.session_state.current_subtopic_title = final_topic
             st.rerun()
 
-    # The old display area at the bottom has been removed.
-
     st.markdown("---")
     if st.button("🔙 Back to Home"):
-        # Clear all relevant session state keys before going home
         for key in ["viewing_subtopic_content", "current_subtopic_title", "selected_section"]:
             if key in st.session_state:
                 del st.session_state[key]

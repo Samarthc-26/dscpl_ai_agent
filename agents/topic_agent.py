@@ -15,7 +15,7 @@ def generate_spiritual_guidance(topic, category):
     prompt = f"""
     You are a compassionate and wise Christian spiritual guide. Your task is to write a thoughtful and encouraging piece of guidance on the topic of "{topic}" within the context of "{category}".
 
-    Please structure your response in the following format, using Markdown for formatting:
+    Please structure your response in the following format, using Markdown for formatting. Keep the entire response concise and to the point.
 
     ### A Spiritual Perspective on {topic}
 
@@ -25,16 +25,16 @@ def generate_spiritual_guidance(topic, category):
 
     #### Key Biblical Principles and Practices
 
-    Present 4 to 5 practical, actionable points based on Biblical teachings. For each point:
-    - Use a bolded heading (e.g., "**1. Embrace the Power of Prayer**").
-    - Explain the principle clearly and compassionately in a short paragraph.
-    - Include at least one relevant Bible verse to support the point, quoting it and providing the reference (e.g., "As it says in Philippians 4:6...").
+    Present 2 to 3 concise, actionable points based on Biblical teachings. For each point:
+    - Use a bolded heading (e.g., "**1. Embrace Prayer**").
+    - Explain the principle clearly and compassionately in a brief paragraph.
+    - Include one relevant Bible verse to support the point, quoting it and providing the reference (e.g., "Philippians 4:6").
 
     ---
 
     #### A Final Message of Encouragement
 
-    Conclude with a warm, uplifting message that leaves the user with a sense of hope, peace, and divine support. Reiterate that God is with them in their journey.
+    Conclude with a warm, uplifting message that leaves the user with a sense of hope and peace.
 
     Ensure the entire response is well-written, spiritually sound, and easy to read.
     """
