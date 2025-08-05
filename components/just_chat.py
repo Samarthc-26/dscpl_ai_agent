@@ -22,7 +22,8 @@ def show_just_chat():
     """
     A multi-purpose chat page with a context-aware Google Calendar login button.
     """
-    st.markdown("## Just Chat")
+    # THIS IS THE VISIBLE CHANGE FOR OUR TEST
+    st.markdown("## Just Chat (v2)")
     st.markdown("_Your personal space to talk, reflect, schedule, and find encouragement._")
 
     # --- Initialize Session State ---
@@ -123,11 +124,6 @@ def show_just_chat():
             CLIENT_ID = st.secrets["google_credentials"]["CLIENT_ID"]
             CLIENT_SECRET = st.secrets["google_credentials"]["CLIENT_SECRET"]
             REDIRECT_URI = st.secrets["google_credentials"]["REDIRECT_URI"]
-
-            # ================== TEMPORARY DEBUGGING LINE ==================
-            # This will print the URI the app is trying to use.
-            st.info(f"**Debug Info:** Using Redirect URI: `{REDIRECT_URI}`")
-            # ============================================================
 
             oauth2 = OAuth2Component(client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
                                      authorize_endpoint="https://accounts.google.com/o/oauth2/v2/auth",
