@@ -122,26 +122,28 @@ def show_just_chat():
         try:
             CLIENT_ID = st.secrets["google_credentials"]["CLIENT_ID"]
             CLIENT_SECRET = st.secrets["google_credentials"]["CLIENT_SECRET"]
-            #
-            # =================== THIS IS THE CORRECTED PART ===================
-            # It now loads the redirect URI from your secrets file, making it
-            # work both locally and on Streamlit Cloud.
-            #
             REDIRECT_URI = st.secrets["google_credentials"]["REDIRECT_URI"]
-            # =================================================================
+
+            # ================== TEMPORARY DEBUGGING LINE ==================
+            # This will print the URI the app is trying to use.
+            st.info(f"**Debug Info:** Using Redirect URI: `{REDIRECT_URI}`")
+            # ============================================================
 
             oauth2 = OAuth2Component(client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
                                      authorize_endpoint="https://accounts.google.com/o/oauth2/v2/auth",
                                      token_endpoint="https://oauth2.googleapis.com/token")
 
             result = oauth2.authorize_button(name="Connect Google Calendar", icon="https://www.google.com/favicon.ico",
-                                             redirect_uri=REDIRECT_URI,  # <-- Uses the variable from secrets
+                                             redirect_uri=REDIRECT_URI,
                                              scope="https://www.googleapis.com/auth/calendar.events",
                                              use_container_width=True, pkce='S256', key="connect_chat_cal")
             if result and "token" in result:
                 st.session_state.token = result['token']
                 st.session_state.show_calendar_login = False
                 st.rerun()
-        except (KeyError, FileNotFoundError) as e:
+        except KeyError as e:
             st.error(
-                f"Google Calendar connection is not configured correctly. Please check your secrets. Missing key: {e}")
+                f"**Configuration Error:** The secret `{e}` was not found. Please check your secrets.toml file on Streamlit Cloud.")
+        except Exception as e:
+            st.error(f"An unexpected error occurred during authentication setup: {e}")
+
