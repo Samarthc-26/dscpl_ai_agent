@@ -17,7 +17,7 @@ if "selected_section" not in st.session_state:
 
 st.set_page_config(page_title="DSCPL - AI Agent", layout="centered")
 
-st.markdown("### 🙏 Welcome to DSCPL – Your Spiritual Companion")
+st.markdown("###  Welcome to DSCPL – Your Spiritual Companion")
 
 # Routing logic
 if st.session_state.page == "menu":

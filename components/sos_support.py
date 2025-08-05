@@ -7,7 +7,7 @@ def show_sos_support():
     st.markdown("## 🆘 SOS Support")
     st.markdown("In moments of crisis, find immediate spiritual support here.")
 
-    if st.button("🙏 I need immediate prayer and support"):
+    if st.button(" I need immediate prayer and support"):
         with st.spinner("Connecting you with an emergency spiritual resource..."):
             time.sleep(3) # Simulate loading
         st.success("Connected!")
