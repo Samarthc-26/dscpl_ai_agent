@@ -1,7 +1,8 @@
 # components/subtopics.py
 
 import streamlit as st
-from agents.topic_agent import generate_daily_program
+# Import the new function from the agent
+from agents.topic_agent import generate_spiritual_guidance
 
 # Predefined subtopics per section
 topics_map = {
@@ -25,46 +26,44 @@ topics_map = {
 def show_subtopics(section):
     st.markdown(f"## ✝️ You selected: **{section}**")
 
-    # --- Topic selection UI ---
     if section in topics_map:
         st.markdown("### 📚 Choose a topic:")
         cols = st.columns(2)
         for i, topic in enumerate(topics_map[section]):
             if cols[i % 2].button(topic, key=f"topic_{i}"):
                 st.session_state["selected_topic"] = topic
-                if "plan" in st.session_state:
-                    del st.session_state["plan"]
+                if "guidance" in st.session_state:
+                    del st.session_state["guidance"]
 
     st.markdown("### ✍️ Or enter a custom topic:")
-    # The label is hidden because we have a markdown title right above it.
     custom_topic = st.text_input("Your custom topic", key="custom_input", label_visibility="collapsed")
 
-    st.markdown("---")  # Visual separator
+    st.markdown("---")
 
-    # --- Program generation button (NEW, CENTRAL LOCATION) ---
-    # We use columns to center the button on the page
     _, col2, _ = st.columns([2, 3, 2])
     with col2:
-        if st.button("🚀 Start Program", use_container_width=True):
+        # Update the button text for clarity
+        if st.button("🕊️ Get Spiritual Guidance", use_container_width=True):
             final_topic = custom_topic.strip() or st.session_state.get("selected_topic", "")
 
             if not final_topic:
                 st.warning("Please select or enter a topic.")
             else:
-                st.info(f"Generating your 7-day spiritual plan for: **{final_topic}**")
+                st.info(f"Generating spiritual guidance for: **{final_topic}**")
                 with st.spinner("Talking to your spiritual assistant..."):
-                    st.session_state.plan = generate_daily_program(final_topic, section)
+                    # Call the new function and store the result
+                    st.session_state.guidance = generate_spiritual_guidance(final_topic, section)
                 st.rerun()
 
-    # --- Plan display area ---
-    if "plan" in st.session_state and st.session_state.plan:
-        st.success("✅ Here’s your 7-day plan:")
-        st.text_area("Spiritual Program", value=st.session_state.plan, height=400)
+    # --- Display the generated article ---
+    if "guidance" in st.session_state and st.session_state.guidance:
+        st.success("✅ Here is your spiritual guidance:")
+        # Use st.markdown to render the formatted text beautifully
+        st.markdown(st.session_state.guidance, unsafe_allow_html=True)
 
-    # --- Always-visible Back Button ---
     st.markdown("---")
     if st.button("🔙 Back to Home"):
-        for key in ["plan", "selected_topic", "selected_section"]:
+        for key in ["guidance", "selected_topic", "selected_section"]:
             if key in st.session_state:
                 del st.session_state[key]
         st.session_state.page = "menu"
