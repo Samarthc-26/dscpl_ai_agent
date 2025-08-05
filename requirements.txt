@@ -4,3 +4,4 @@ langchain
 langchain-groq
 google-api-python-client
 python-dotenv
+streamlit-js-eval

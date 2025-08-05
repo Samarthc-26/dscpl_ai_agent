@@ -1,107 +1,155 @@
 # components/calendar_sync.py
 
 import streamlit as st
-import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
+import json
 
-# New imports for Google API
+# Imports for Google API
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+# Import the necessary components from LangChain and our agents
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+from agents.base_chain import load_groq_llm
 from streamlit_oauth import OAuth2Component
 
 
+def schedule_events_on_calendar(title, start_date_str, time_str, days):
+    """Helper function to connect to Google Calendar and create events."""
+    try:
+        token_info = st.session_state.token
+        CLIENT_ID = st.secrets["google_credentials"]["CLIENT_ID"]
+        CLIENT_SECRET = st.secrets["google_credentials"]["CLIENT_SECRET"]
+        TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
+        SCOPE = "https://www.googleapis.com/auth/calendar.events"
+
+        creds = Credentials(
+            token=token_info['access_token'],
+            refresh_token=token_info.get('refresh_token'),
+            token_uri=TOKEN_ENDPOINT,
+            client_id=CLIENT_ID,
+            client_secret=CLIENT_SECRET,
+            scopes=[SCOPE]
+        )
+        service = build('calendar', 'v3', credentials=creds)
+        start_date = datetime.fromisoformat(start_date_str)
+
+        for i in range(days):
+            current_date = start_date + timedelta(days=i)
+            start_datetime_str = f"{current_date.strftime('%Y-%m-%d')}T{time_str}"
+            start_datetime = datetime.fromisoformat(start_datetime_str)
+            end_datetime = start_datetime + timedelta(hours=1)
+
+            event = {
+                'summary': title,
+                'start': {'dateTime': start_datetime.isoformat(), 'timeZone': 'Asia/Kolkata'},
+                'end': {'dateTime': end_datetime.isoformat(), 'timeZone': 'Asia/Kolkata'},
+            }
+            service.events().insert(calendarId='primary', body=event).execute()
+
+        success_message = f"Done! I've scheduled '{title}' for {days} day(s)."
+        st.success(success_message)
+        st.balloons()
+        st.session_state.calendar_chat_messages.append({"role": "assistant", "content": success_message})
+
+    except Exception as e:
+        error_message = f"An error occurred during scheduling: {e}"
+        st.error(error_message)
+        st.session_state.calendar_chat_messages.append({"role": "assistant", "content": error_message})
+
+
 def show_calendar_sync():
-    """
-    Handles Google Calendar OAuth and displays upcoming events.
-    This version includes the fix for the Credentials TypeError.
-    """
-    st.markdown("## 🗓️ Sync with Your Google Calendar")
-    st.markdown("Connect your Google Calendar to automatically schedule your spiritual plan.")
+    st.markdown("## 🗓️ AI-Powered Scheduling")
+    st.markdown("Connect your calendar and simply tell me what you want to schedule.")
     st.markdown("---")
 
     try:
         CLIENT_ID = st.secrets["google_credentials"]["CLIENT_ID"]
         CLIENT_SECRET = st.secrets["google_credentials"]["CLIENT_SECRET"]
     except (KeyError, FileNotFoundError):
-        st.error(
-            "Google credentials not found. Please ensure you have a .streamlit/secrets.toml file with your credentials.")
+        st.error("Google credentials not found.")
         return
 
-    AUTHORIZE_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
-    TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
-    SCOPE = "https://www.googleapis.com/auth/calendar.events"
-
-    oauth2 = OAuth2Component(
-        client_id=CLIENT_ID,
-        client_secret=CLIENT_SECRET,
-        authorize_endpoint=AUTHORIZE_ENDPOINT,
-        token_endpoint=TOKEN_ENDPOINT,
-    )
+    oauth2 = OAuth2Component(client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
+                             authorize_endpoint="https://accounts.google.com/o/oauth2/v2/auth",
+                             token_endpoint="https://oauth2.googleapis.com/token")
 
     if 'token' not in st.session_state:
         st.session_state.token = None
+    if "calendar_chat_messages" not in st.session_state:
+        st.session_state.calendar_chat_messages = []
 
     if st.session_state.token:
         st.success("Your Google Calendar is successfully connected!")
 
-        try:
-            # ** FINAL FIX IS HERE **
-            # Manually create the Credentials object from the token dictionary
-            token_info = st.session_state.token
-            creds = Credentials(
-                token=token_info['access_token'],
-                refresh_token=token_info.get('refresh_token'),
-                token_uri=TOKEN_ENDPOINT,
-                client_id=CLIENT_ID,
-                client_secret=CLIENT_SECRET,
-                scopes=[SCOPE]
-            )
+        for message in st.session_state.calendar_chat_messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-            service = build('calendar', 'v3', credentials=creds)
+        if prompt := st.chat_input("e.g., 'Schedule prayer for 5 days from tomorrow at 8am'"):
+            st.session_state.calendar_chat_messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
 
-            st.markdown("### Your Next 5 Upcoming Events:")
-            with st.spinner("Fetching events from your calendar..."):
-                now = datetime.utcnow().isoformat() + 'Z'
-                events_result = service.events().list(
-                    calendarId='primary', timeMin=now,
-                    maxResults=5, singleEvents=True,
-                    orderBy='startTime'
-                ).execute()
-                events = events_result.get('items', [])
+            with st.chat_message("assistant"):
+                with st.spinner("Analyzing your request..."):
+                    # --- AI Logic is now directly inside this function ---
+                    llm = load_groq_llm()
+                    if llm:
+                        current_date = datetime.now().strftime("%A, %Y-%m-%d")
+                        template = f"""You are an expert at extracting structured data from natural language. Your task is to analyze the user's request to schedule a reminder and output a JSON object.
+Current date is: {current_date}. Use this as a reference for terms like 'today', 'tomorrow', or day names like 'next Monday'.
+You MUST extract the following fields:
+- "title": The title of the event.
+- "start_date": The starting date in "YYYY-MM-DD" format.
+- "time": The time of the event in "HH:MM:SS" (24-hour) format. If no time is mentioned, default to "09:00:00".
+- "days": The total number of days the event should be scheduled for. If not mentioned, default to 1.
+Your response MUST be ONLY the JSON object and nothing else. Do not add any explanatory text.
+User request: {{user_prompt}}
+JSON output:
+"""
+                        PROMPT = PromptTemplate(input_variables=["user_prompt"], template=template)
+                        chain = LLMChain(llm=llm, prompt=PROMPT, verbose=True)
 
-            if not events:
-                st.write("No upcoming events found.")
-            else:
-                for event in events:
-                    start = event['start'].get('dateTime', event['start'].get('date'))
-                    start_formatted = datetime.fromisoformat(start.replace('Z', '+00:00')).strftime(
-                        '%a, %b %d at %I:%M %p')
-                    st.write(f"- **{event['summary']}** on {start_formatted}")
+                        try:
+                            response_str = chain.run(user_prompt=prompt)
+                            schedule_data = json.loads(response_str)
 
-        except HttpError as error:
-            st.error(f"An error occurred: {error}")
-            st.write("Your token may have expired. Please disconnect and reconnect.")
-        except Exception as e:
-            st.error(f"An unexpected error occurred: {e}")
+                            title = schedule_data.get("title", "Untitled Event")
+                            start_date_str = schedule_data.get("start_date")
+                            time_str = schedule_data.get("time")
+                            days = int(schedule_data.get("days", 1))
+
+                            info_message = f"Okay, scheduling **'{title}'** for **{days} day(s)**, starting **{start_date_str}** at **{time_str}**."
+                            st.info(info_message)
+                            st.session_state.calendar_chat_messages.append(
+                                {"role": "assistant", "content": info_message})
+
+                            schedule_events_on_calendar(title, start_date_str, time_str, days)
+
+                        except json.JSONDecodeError:
+                            err_msg = "I'm sorry, I couldn't understand that. Could you please try rephrasing?"
+                            st.error(err_msg)
+                            st.session_state.calendar_chat_messages.append({"role": "assistant", "content": err_msg})
+                        except Exception as e:
+                            err_msg = f"An unexpected error occurred: {e}"
+                            st.error(err_msg)
+                            st.session_state.calendar_chat_messages.append({"role": "assistant", "content": err_msg})
+                    else:
+                        st.error("The scheduling agent is currently unavailable.")
 
         st.markdown("---")
         if st.button("Disconnect Calendar"):
             st.session_state.token = None
             st.rerun()
-
     else:
         st.info("Connect your account to get started.")
-        result = oauth2.authorize_button(
-            name="Connect to Google Calendar",
-            icon="https://www.google.com/favicon.ico",
-            redirect_uri="http://localhost:8501",
-            scope=SCOPE,
-            use_container_width=True,
-            pkce='S256'
-        )
-
+        result = oauth2.authorize_button(name="Connect to Google Calendar", icon="https://www.google.com/favicon.ico",
+                                         redirect_uri="http://localhost:8501",
+                                         scope="https://www.googleapis.com/auth/calendar.events",
+                                         use_container_width=True, pkce='S256')
         if result and "token" in result:
             st.session_state.token = result['token']
             st.rerun()
@@ -110,3 +158,4 @@ def show_calendar_sync():
     if st.button("🔙 Back to Home"):
         st.session_state.page = "menu"
         st.rerun()
+

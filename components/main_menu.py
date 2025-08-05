@@ -1,9 +1,14 @@
 # components/main_menu.py
 
 import streamlit as st
+from streamlit_js_eval import streamlit_js_eval
 
 
 def show_main_menu():
+    """
+    Displays the main menu. This version includes the final corrected
+    function call for the "Test Reminder Notification" button.
+    """
     st.markdown("## What do you need today?")
 
     subtopic_buttons = [
@@ -14,7 +19,7 @@ def show_main_menu():
         "SOS Support": "sos_support",
         "Inspiration Feed": "inspiration_feed",
         "Calendar Sync": "calendar_sync",
-        "Just Chat": "just_chat"  # Add the chat page target
+        "Just Chat": "just_chat"
     }
 
     st.markdown("### Daily Practices")
@@ -45,10 +50,38 @@ def show_main_menu():
         st.rerun()
 
     st.markdown("---")
-    # Update the "Just Chat" button to navigate to the new page
     if st.button("💬 Just Chat", key="chat_btn", use_container_width=True):
         st.session_state.page = dedicated_page_buttons["Just Chat"]
         st.rerun()
 
-    st.button("🔔 Test Reminder Notification", help="Simulates a reminder (coming soon!)", key="reminder_btn")
+    # --- Functional Notification Button ---
+    if st.button("🔔 Test Reminder Notification", help="Click to test browser notifications", key="reminder_btn"):
+        js_code = """
+        const showNotification = () => {
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notification");
+                return;
+            }
+            if (Notification.permission === "granted") {
+                new Notification("DSCPL Reminder!", {
+                    body: "This is how your daily reminders would look. For real reminders, use the Calendar Sync feature!",
+                    icon: "https://i.imgur.com/vQkJOQ1.png"
+                });
+            } 
+            else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(function (permission) {
+                    if (permission === "granted") {
+                        new Notification("DSCPL Reminder!", {
+                            body: "Great! Notifications are enabled.",
+                            icon: "https://i.imgur.com/vQkJOQ1.png"
+                        });
+                    }
+                });
+            }
+        }
+        showNotification();
+        """
+        # FIX: The JavaScript code must be passed as a keyword argument.
+        streamlit_js_eval(js_expressions=js_code)
+        st.success("Notification test sent! Check your browser and system notifications.")
 

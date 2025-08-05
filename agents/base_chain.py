@@ -37,8 +37,7 @@ def get_devotional_conversation_chain():
 
 def get_just_chat_conversation_chain():
     """
-    This is the new, separate chain for the "Just Chat" feature.
-    It has a specific prompt to guide its responses.
+    This is the chain for the "Just Chat" feature.
     """
     llm = load_groq_llm()
     if llm:
