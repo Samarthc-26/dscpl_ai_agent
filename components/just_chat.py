@@ -122,15 +122,20 @@ def show_just_chat():
         try:
             CLIENT_ID = st.secrets["google_credentials"]["CLIENT_ID"]
             CLIENT_SECRET = st.secrets["google_credentials"]["CLIENT_SECRET"]
-            # **CORRECTED**: Use a redirect URI from secrets for deployment flexibility
+            #
+            # =================== THIS IS THE CORRECTED PART ===================
+            # It now loads the redirect URI from your secrets file, making it
+            # work both locally and on Streamlit Cloud.
+            #
             REDIRECT_URI = st.secrets["google_credentials"]["REDIRECT_URI"]
+            # =================================================================
 
             oauth2 = OAuth2Component(client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
                                      authorize_endpoint="https://accounts.google.com/o/oauth2/v2/auth",
                                      token_endpoint="https://oauth2.googleapis.com/token")
 
             result = oauth2.authorize_button(name="Connect Google Calendar", icon="https://www.google.com/favicon.ico",
-                                             redirect_uri=REDIRECT_URI,  # <-- THIS IS THE FIX
+                                             redirect_uri=REDIRECT_URI,  # <-- Uses the variable from secrets
                                              scope="https://www.googleapis.com/auth/calendar.events",
                                              use_container_width=True, pkce='S256', key="connect_chat_cal")
             if result and "token" in result:
@@ -140,4 +145,3 @@ def show_just_chat():
         except (KeyError, FileNotFoundError) as e:
             st.error(
                 f"Google Calendar connection is not configured correctly. Please check your secrets. Missing key: {e}")
-
