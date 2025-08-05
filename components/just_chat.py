@@ -23,7 +23,7 @@ def show_just_chat():
     A multi-purpose chat page with a context-aware Google Calendar login button.
     """
     # THIS IS THE VISIBLE CHANGE FOR OUR TEST
-    st.markdown("## Just Chat (v2)")
+    st.markdown("## Just Chat")
     st.markdown("_Your personal space to talk, reflect, schedule, and find encouragement._")
 
     # --- Initialize Session State ---

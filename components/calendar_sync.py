@@ -19,6 +19,7 @@ from streamlit_oauth import OAuth2Component
 def schedule_events_on_calendar(title, start_date_str, time_str, days):
     """Helper function to connect to Google Calendar and create events."""
     try:
+        # This function correctly uses the token from session_state
         token_info = st.session_state.token
         CLIENT_ID = st.secrets["google_credentials"]["CLIENT_ID"]
         CLIENT_SECRET = st.secrets["google_credentials"]["CLIENT_SECRET"]
@@ -68,8 +69,10 @@ def show_calendar_sync():
     try:
         CLIENT_ID = st.secrets["google_credentials"]["CLIENT_ID"]
         CLIENT_SECRET = st.secrets["google_credentials"]["CLIENT_SECRET"]
-    except (KeyError, FileNotFoundError):
-        st.error("Google credentials not found.")
+        # **CORRECTED**: Load the redirect URI from secrets here as well
+        REDIRECT_URI = st.secrets["google_credentials"]["REDIRECT_URI"]
+    except (KeyError, FileNotFoundError) as e:
+        st.error(f"Google credentials not found in secrets. Please check your configuration. Missing key: {e}")
         return
 
     oauth2 = OAuth2Component(client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
@@ -95,7 +98,6 @@ def show_calendar_sync():
 
             with st.chat_message("assistant"):
                 with st.spinner("Analyzing your request..."):
-                    # --- AI Logic is now directly inside this function ---
                     llm = load_groq_llm()
                     if llm:
                         current_date = datetime.now().strftime("%A, %Y-%m-%d")
@@ -146,8 +148,9 @@ JSON output:
             st.rerun()
     else:
         st.info("Connect your account to get started.")
+        # **CORRECTED**: The button now uses the REDIRECT_URI from your secrets
         result = oauth2.authorize_button(name="Connect to Google Calendar", icon="https://www.google.com/favicon.ico",
-                                         redirect_uri="http://localhost:8501",
+                                         redirect_uri=REDIRECT_URI,
                                          scope="https://www.googleapis.com/auth/calendar.events",
                                          use_container_width=True, pkce='S256')
         if result and "token" in result:
@@ -158,4 +161,3 @@ JSON output:
     if st.button("🔙 Back to Home"):
         st.session_state.page = "menu"
         st.rerun()
-
